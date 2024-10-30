@@ -22,7 +22,8 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     # Initialize matches and vuln_counts
     matches = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))))
     vuln_counts = defaultdict(lambda: defaultdict(int))
-
+    print(f"Total number of resultId's: {len(json_response_data['data'])}")
+    quit
     # Loop through all results
     for result in json_response_data["data"]:
         severityCount = 0
@@ -35,7 +36,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
         resultContainerName = result["recordDetails"]["labels"]["kubernetes.pod.container.name"]
         resultWorkloadName = result["recordDetails"]["labels"]["kubernetes.workload.name"]
         resultWorkloadType = result["recordDetails"]["labels"]["kubernetes.workload.type"]
-
+        
         LOG.info(f"Getting SBOM for resultId: {resultId}, resourceId: {resourceId}")
         url = f"https://{arg_secure_url_authority}/secure/vulnerability/v1beta1/sboms?assetId={resourceId}&assetType=container-image"
         response = http_client.request(method="GET", url=url, redirect=True, timeout=3)

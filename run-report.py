@@ -23,11 +23,12 @@ import os.path
 import os
 from modules.get_runtime_vuln_findings import vulnRuntimeFindings
 from modules.download_report import downloadReport
+from modules.rerun_report import rerun_report
 
 # Setup logger
 LOG = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.DEBUG,
     format="%(asctime)s.%(msecs)03d %(levelname)s - %(funcName)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
@@ -127,6 +128,12 @@ def main():
             LOG.info(f"scheduleId := {scheduleId}")
             LOG.info(f"scheduleName := {scheduleName}")
             #print(json.dumps(json_response_data, indent=2))
+        elif response.status == 404:
+            LOG.error(f"Exiting!! Report schedule not found for scheduleId := {arg_schedule_id}")
+            raise SystemExit(-1)
+        elif response.status == 401:
+            LOG.error(f"Exiting!! Unauthorized token access to report schedule for scheduleId := {arg_schedule_id}")
+            raise SystemExit(-1)
         else:
             raise UnexpectedHTTPResponse(
                 f"Unexpected HTTP response status: {response.status}"
@@ -208,35 +215,17 @@ def main():
             LOG.debug(f"Response status: {response.status}")
             #print(json.dumps(json_response_data, indent=2))
 
-            downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
-            vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority)
+            hasReportEverRun = json_response_data.get("lastCompletedReport", {})
+
+            if (not hasReportEverRun):
+                print("No report has been generated before. Running new report...")
+                rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
+            else:                
+                downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
+                vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority)
         else:
-            LOG.info("Rerunning report schedule...")
-
-            url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/run"
-            response = http_client.request(method="POST", url=url)
-            # Exepct a 202
-            LOG.debug(f"Response status: {response.status}")
-
-            while True:
-
-                url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
-                response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
-                json_response_data = json.loads(response.data.decode())
-                LOG.debug(f"Response status: {response.status}")
-                #print(json.dumps(json_response_data, indent=2))
-
-                currentReportStatus = json_response_data.get("currentReport", {}).get("status", "completed")
-                print(currentReportStatus)
-
-                if currentReportStatus not in ["scheduled", "progress"]:
-                    print("Processing latest report...")
-                    downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
-                    vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority)
-                    break
-                else:
-                    time.sleep(1)
-
+            rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
+   
 #{
 #  "scheduleId": "27endkp7PSMl64NurDDsPaHM7AO",
 #  "lastCompletedReport": {
