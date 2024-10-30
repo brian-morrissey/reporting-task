@@ -28,7 +28,7 @@ from modules.rerun_report import rerun_report
 # Setup logger
 LOG = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.ERROR,
     format="%(asctime)s.%(msecs)03d %(levelname)s - %(funcName)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
