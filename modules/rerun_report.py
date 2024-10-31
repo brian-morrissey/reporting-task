@@ -20,7 +20,7 @@ def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id):
         #print(json.dumps(json_response_data, indent=2))
 
         currentReportStatus = json_response_data.get("currentReport", {}).get("status", "completed")
-        print(currentReportStatus)
+        print(f"Report Status: {currentReportStatus.capitalize()}")
 
         if currentReportStatus not in ["scheduled", "progress"]:
             print("Processing latest report...")

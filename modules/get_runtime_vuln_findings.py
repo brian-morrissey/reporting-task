@@ -44,11 +44,12 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                 resultNamespaceName = result["recordDetails"]["labels"]["kubernetes.namespace.name"]
                 resultContainerName = result["recordDetails"]["labels"]["kubernetes.pod.container.name"]
                 resultWorkloadType = result["recordDetails"]["labels"]["kubernetes.workload.type"]
+                resultWorkloadName = result["recordDetails"]["labels"]["kubernetes.workload.name"]
             except KeyError as e:
                 LOG.error(f"Missing key in result: {e}")
                 LOG.error(f"Details of missing key: {result}")
                 break
-
+            
             # Check for image in the report and skip downloading the SBOM if its not there to save time
             with open('report', 'r') as file:
                 for line in file:
@@ -93,8 +94,8 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                                 row['K8S cluster name'] == resultClusterName and
                                 row['K8S namespace name'] == resultNamespaceName and
                                 row['K8S workload type'] == resultWorkloadType and
+                                row['K8S workload name'] == resultWorkloadName and
                                 row['K8S container name'] == resultContainerName):
-                            
                                 print(row['K8S cluster name'],"->",row['K8S namespace name'],"->",row['K8S workload type'],"->",row['K8S workload name'],"->",row['K8S container name'], row['Severity'], row['Package name'], row['Package version'], row['Vulnerability ID'])
                                 severityCount += 1
                 
