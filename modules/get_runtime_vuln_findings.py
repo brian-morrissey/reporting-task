@@ -6,6 +6,7 @@ import shutil
 import os
 import csv
 from collections import defaultdict
+from datetime import datetime
 
 
 def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
@@ -18,8 +19,10 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     page = ""
     originalTotalEntries = 0
     newTotalEntries = 0
-    totalRuntimeEntries = 0
     progressCounter = 0
+    outputFilename = 'results.csv'
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    outputFilename = f'results_{timestamp}.csv'
 
     while nextPage:
         LOG.info("Getting Vuln->Findings->Runtime..")
@@ -38,7 +41,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             nextPage = False
 
         # Add header to new report and overwrite if the file exists
-        with open('report', mode='r') as source_file, open('results.csv', mode='w', newline='') as destination_file:
+        with open('report', mode='r') as source_file, open(outputFilename, mode='w', newline='') as destination_file:
             header = source_file.readline()
             destination_file.write(header)
             
@@ -74,7 +77,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                         row['K8S workload name'] == resultWorkloadName and
                         row['K8S container name'] == resultContainerName):
                         #print(row['K8S cluster name'],"->",row['K8S namespace name'],"->",row['K8S workload type'],"->",row['K8S workload name'],"->",row['K8S container name'], row['Severity'], row['Package name'], row['Package version'], row['Vulnerability ID'])
-                        with open('results.csv', mode='a', newline='') as results_file:
+                        with open(outputFilename, mode='a', newline='') as results_file:
                             csv_writer = csv.writer(results_file)
                             csv_writer.writerow(row.values())
                         severityCount += 1
@@ -89,3 +92,5 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     print(f"{BLUE}Total entries for final report: {newTotalEntries}{RESET}")
     print(f"{BLUE}Total inactive runtime entries trimmed {originalTotalEntries - newTotalEntries}{RESET}")
     print(f"{BLUE}Total assets scanned: {totalRuntimeFindings}{RESET}")
+    print(f"{GREEN}Output report filename: {outputFilename}{RESET}")
+    
