@@ -76,6 +76,13 @@ def _parse_args():
         action="store",
         help="Sysdig Runtime Report Schedule ID",
     )
+
+    parser.add_argument(
+        "--debug",
+        required=False,
+        action="store_true",
+        help="Set logging to debug level",
+    )
     return parser.parse_args()
 
 def main():
@@ -88,6 +95,10 @@ def main():
         arg_secure_url_authority = args.secure_url_authority
         arg_authentication_bearer = args.api_token
         arg_schedule_id = args.schedule_id
+
+        # Turn on debug logging if requested in args
+        if args.debug:
+            LOG.setLevel(logging.DEBUG)
 
         # Get the timestamp of this run
         now = datetime.now()
@@ -266,6 +277,7 @@ def main():
         elapsed_seconds = pc_end - pc_start
         execution_time = "{}".format(str(timedelta(seconds=elapsed_seconds)))
 
+        print(f"Elapsed execution time: {execution_time}")
         LOG.debug(f"Elapsed execution time: {execution_time}")
         LOG.debug(f"HTTP Response Code 429 occurred: {num_of_429} times.")
         LOG.debug(f"HTTP Response Code 504 occurred: {num_of_504} times.")
