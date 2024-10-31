@@ -14,10 +14,7 @@
 
 2. Retrieves runtime workloads report from Vulnerabilities->Findings->Reportings
 
-
-3. If results from runtime vulnerabilities match runtime workloads report pull the SBOM for that image
-
-4. Print the runtime image information and individual CVEs that match the report
+3. Print the runtime image information and individual CVEs that match the report
 
 
 
