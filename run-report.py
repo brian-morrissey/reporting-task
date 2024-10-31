@@ -128,6 +128,17 @@ def main():
             LOG.info(f"scheduleId := {scheduleId}")
             LOG.info(f"scheduleName := {scheduleName}")
             #print(json.dumps(json_response_data, indent=2))
+
+            #Exit if report is not for runtime workloads, gz compressed, and csv export
+            if json_response_data.get("entityType", {}) != "k8s":
+                LOG.error(f"Exiting!! Report entity is for {json_response_data.get("entityType", {})} scan and not a runtime workloads. Please use a runtime workloads report.")
+                raise SystemExit(-1)
+            elif json_response_data.get("compression", {}) != "gz":
+                LOG.error(f"Exiting!! Report compression is {json_response_data.get("compression", {})} and not gz. Please use a gz compression in report.")
+                raise SystemExit(-1)
+            elif json_response_data.get("reportFormat", {}) != "csv":
+                LOG.error(f"Exiting!! Report export file format is {json_response_data.get("reportFormat", {})} and not csv. Please use a csv for export file format in report.")
+                raise SystemExit(-1)
         elif response.status == 404:
             LOG.error(f"Exiting!! Report schedule not found for scheduleId := {arg_schedule_id}")
             raise SystemExit(-1)
@@ -216,7 +227,7 @@ def main():
             #print(json.dumps(json_response_data, indent=2))
 
             hasReportEverRun = json_response_data.get("lastCompletedReport", {})
-
+            
             if (not hasReportEverRun):
                 print("No report has been generated before. Running new report...")
                 rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
