@@ -53,7 +53,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             # Check for image in the report and skip downloading the SBOM if its not there to save time
             with open('report', 'r') as file:
                 for line in file:
-                    if resourceId in line:
+                    if resourceId in line and resultClusterName and resultNamespaceName and resultContainerName and resultWorkloadName in line:
                         foundInReport = True
 
             if(foundInReport):
