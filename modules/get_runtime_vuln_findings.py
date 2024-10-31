@@ -74,6 +74,11 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                 for component in components:
                     name = component["name"]
                     version = component["version"]
+                    group = component.get("group", {})  
+
+                    #For java and others concat group and name from SBOM to match report format
+                    if(group):
+                        name = f"{group}:{name}"
 
                     # Open the file report which is CSV delimited
                     with open('report', mode='r') as file:
