@@ -97,6 +97,6 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     print(f"{BLUE}Total assets scanned: {totalRuntimeFindings}{RESET}")
     print(f"{BLUE}Total runtime report entries: {originalTotalEntries}{RESET}")
     print(f"{BLUE}Total entries for final report: {newTotalEntries}{RESET}")
-    print(f"{BLUE}Total inactive runtime entries trimmed {originalTotalEntries - newTotalEntries}{RESET}")
+    print(f"{BLUE}Total inactive runtime entries trimmed: {originalTotalEntries - newTotalEntries}{RESET}")
     print(f"{GREEN}Output report filename: {outputFilename}{RESET}")
     
