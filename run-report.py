@@ -88,9 +88,6 @@ def _parse_args():
     return parser.parse_args()
 
 def main():
-
-#   try:
-
         # Parse the command line arguments
         args = _parse_args()
         global arg_secure_url_authority
@@ -180,11 +177,9 @@ def main():
             runNewReport = False
 
             if currentReportRun is None and lastReportRun is None:
-
                 runNewReport = True
 
             elif currentReportRun is None:
-
                 lastReportRunCompletedAt = lastReportRun['completedAt']
                 dt_lastReportRunCompletedAt = datetime.fromisoformat(lastReportRunCompletedAt.replace("Z", "+00:00"))
                 local_timezone = tz.tzlocal()
@@ -192,17 +187,16 @@ def main():
                 print(f"The last report run completed at {local_dt_lastReportRunCompletedAt}.")
                 prompt_runReport = input(f"Would you like to rerun the report (yes/[no]): ")
 
-                if prompt_runReport.lower() in ['yes','y', '']:
+                if prompt_runReport.lower() in ['yes','y']:
                     runNewReport = True
-                          
+                         
         else:
             raise UnexpectedHTTPResponse(
                 f"HTTP STATUS {response.status}: Error getting report schedule status for {arg_schedule_id}" 
             )
 
         # Prompt for last or rerun
-        use_last_run = input(f"Use last report schedule run? ([yes]/no): ")
-        if use_last_run.lower() in ['yes','y', '']:
+        if not runNewReport:
             print("Using last report schedule run...")
             try:
                 url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
