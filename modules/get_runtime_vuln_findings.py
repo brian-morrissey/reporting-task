@@ -44,12 +44,12 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
         # Check if there is a next page and if not exit the loop
         page = json_response_data.get("page", {}).get("next", "")
 
-        # Get total count of runtime findings
-        totalRuntimeFindings = json_response_data.get("page", {}).get("matched", "")
-        
         if not page:
             nextPage = False
             
+        # Get total count of runtime findings
+        totalRuntimeFindings = json_response_data.get("page", {}).get("matched", "")
+
         # Loop through all results
         for result in json_response_data["data"]:
             severityCount = 0

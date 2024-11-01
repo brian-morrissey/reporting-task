@@ -24,6 +24,7 @@ import os
 from modules.get_runtime_vuln_findings import vulnRuntimeFindings
 from modules.download_report import downloadReport
 from modules.rerun_report import rerun_report
+from modules.get_report_schedules import getReportSchedules
 
 # Setup logger
 LOG = logging.getLogger(__name__)
@@ -76,7 +77,12 @@ def _parse_args():
         action="store",
         help="Sysdig Runtime Report Schedule ID",
     )
-
+    parser.add_argument(
+        "--list_schedules",
+        required=False,
+        action="store_true",
+        help="List Sysdig Runtime Report Schedule IDs (can not be used with other params)",
+    )
     parser.add_argument(
         "--debug",
         required=False,
@@ -112,23 +118,15 @@ def main():
         # Start performance counter
         pc_start = time.perf_counter()
 
-#---------------------------
-# Run Schedule
-#---------------------------
-#       url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/run"
-#       response = _post_data_to_http_request(url)
-#       json_response_data = json.loads(response)
-#       print(json.dumps(json_response_data, indent=2))
-#---------------------------
-# Get List of Generated Reports
-#---------------------------
-#       url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/reports"
-#       response = _get_data_from_http_request(url)
-#       json_response_data = json.loads(response)
-#       print(json.dumps(json_response_data, indent=2))
-#---------------------------
-# Get Report Schedule
-#---------------------------
+        # Get List of Scheduled Reports if flag is present and quit
+        if args.list_schedules:
+            getReportSchedules(LOG, http_client, arg_secure_url_authority)
+            quit()
+
+
+        #---------------------------
+        # Get Report Schedule
+        #----------------------------
         LOG.info(f"Retrieving report schedule for scheduleId := {arg_schedule_id}...")
         url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}"
         response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
@@ -160,37 +158,10 @@ def main():
             raise UnexpectedHTTPResponse(
                 f"Unexpected HTTP response status: {response.status}"
             )
-#{
-#  "id": "27endkp7PSMl64NurDDsPaHM7AO",
-#  "name": "Test report",
-#  "description": "",
-#  "reportType": "vulnerabilities",
-#  "reportFormat": "csv",
-#  "compression": "gz",
-#  "entityType": "k8s",
-#  "filters": {
-#    "conditionFilters": {
-#      "vulnFixAvailable": {
-#        "value": true
-#      },
-#      "vulnSeverity": {
-#        "value": "High",
-#        "comparison": ">="
-#      }
-#    },
-#    "scopeFilter": ""
-#  },
-#  "schedule": "00 09 * * *",
-#  "enabled": true,
-#  "reportLastStartedAt": "2024-10-24T18:13:04.932338Z",
-#  "reportLastCompletedAt": "2024-10-24T18:13:05.644446Z",
-#  "reportLastScheduledAt": "2024-10-24T18:12:00Z",
-#  "createdAt": "2022-04-11T15:05:08.084506Z",
-#  "updatedAt": "2024-06-27T18:56:04.672777Z"
-#}
-#---------------------------
-# Get Last Generated Report Status
-#---------------------------
+
+        #---------------------------
+        # Get Last Generated Report Status
+        #----------------------------
         print(f"Retrieving status of report schedule for scheduleId := {scheduleId}...")
         url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
         response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
@@ -218,10 +189,7 @@ def main():
 
                 if prompt_runReport.lower() in ['yes','y', '']:
                     runNewReport = True
-                
-                ####
-
-                
+                          
         else:
             raise UnexpectedHTTPResponse(
                 f"HTTP STATUS {response.status}: Error getting report schedule status for {arg_schedule_id}" 
@@ -248,21 +216,6 @@ def main():
         else:
             rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
    
-#{
-#  "scheduleId": "27endkp7PSMl64NurDDsPaHM7AO",
-#  "lastCompletedReport": {
-#    "reportId": "2ntXuUSG4d8wXkvJ2LOqELlr1zC",
-#    "status": "completed",
-#    "reportType": "vulnerabilities",
-#    "reportFormat": "csv",
-#    "compression": "gz",
-#    "entityType": "k8s",
-#    "scheduledAt": "2024-10-24T18:12:00Z",
-#    "startedAt": "2024-10-24T18:13:04.932338Z",
-#    "completedAt": "2024-10-24T18:13:05.644446Z"
-#  }
-#}
-#---------------------------
         # Cleanup
         # Check if the file "report" exists and delete it if it does
         report_file_path = 'report'
@@ -281,94 +234,7 @@ def main():
         LOG.debug(f"Elapsed execution time: {execution_time}")
         LOG.debug(f"HTTP Response Code 429 occurred: {num_of_429} times.")
         LOG.debug(f"HTTP Response Code 504 occurred: {num_of_504} times.")
-#       LOG.info(f'Request for runtime scan results complete.')
-
-#   except Exception as e:
-#       LOG.critical(e)
-#       LOG.error(f'Request to download runtime results failed.')
-#       raise SystemExit(-1)
-
-#=====================
-#=====================
-
-def _post_data_to_http_request(url, timeout=3):
-
-    try:
-
-        LOG.debug(f"Sending http post request to: {url}")
-
-        response = http_client.request(method="POST", url=url)
-        response_data = response.data.decode()
-
-        LOG.debug(f"Response status: {response.status}")
-        LOG.debug(f"Response data: {response_data}")
-
-        return response_data
-
-    except Exception as e:
-        LOG.critical(e)
-        LOG.critical(f"Error on http post request to: {url}")
-        raise SystemExit(-1)
-
-def _get_data_from_http_request(url):
-
-    try:
-
-        global num_of_429
-        global num_of_504
-        response_data = None
-        time_to_sleep = 2
-
-        while True:
-
-            LOG.debug(f"Sending http request to: {url}")
-
-            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
-            response_data = response.data.decode()
-
-            LOG.debug(f"Response status: {response.status}")
-
-            if response.status == 200:
-                #LOG.debug(f"Response data: {response_data}")
-                break
-
-            elif response.status in [ 429, 504 ]:
-
-                if response.status == 429:
-                    message = "API throttling"
-                    num_of_429 += 1
-                elif response.status == 504:
-                    message = "Gateway Timeout"
-                    num_of_504 += 1
-
-                LOG.debug(f"Response data: {response_data}")
-                LOG.INFO(f"Sleeping {time_to_sleep} seconds due to {message}...")
-
-                for interval in range(1,time_to_sleep):
-                   print(f"Sleeping {time_to_sleep-interval} seconds due to {message}...", end="\r")
-                   time.sleep(1)
-
-                time_to_sleep = time_to_sleep * 2
-
-                if time_to_sleep > 64:
-                    raise TimeoutError("Application timeout invoked")
-
-                # Extra space to clear earlier message
-                print( "Retrying request...                                    ", end="\r")
-
-                LOG.debug(f"Retrying request...")
-
-            else:
-                raise UnexpectedHTTPResponse(
-                    f"Unexpected HTTP response status: {response.status}"
-                )
-
-        return response_data
-
-    except Exception as e:
-        LOG.critical(e)
-        LOG.critical(f"Error while requesting url: {url}")
-        raise SystemExit(-1)
+        LOG.info(f'Request for runtime scan results complete.')
 
 if __name__ == "__main__":
     sys.exit(main())
