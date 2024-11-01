@@ -58,6 +58,11 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
         # Get total count of runtime findings
         totalRuntimeFindings = json_response_data.get("page", {}).get("matched", "")
 
+        # Open the file report which is CSV delimited and get total entries
+        with open('report', mode='r') as file:
+            csv_reader = csv.DictReader(file)
+            originalTotalEntries = sum(1 for _ in csv_reader)
+
         # Loop through all results
         for result in json_response_data["data"]:
             severityCount = 0
@@ -75,11 +80,11 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                 LOG.error(f"Details of missing key: {result}")
                 break
             
+
             # Open the file report which is CSV delimited
             with open('report', mode='r') as file:
                 csv_reader = csv.DictReader(file)
-                originalTotalEntries = sum(1 for _ in csv_reader)
-                file.seek(0)
+
                 # Iterate through each row in the CSV
                 for row in csv_reader:
                     # Match the fields

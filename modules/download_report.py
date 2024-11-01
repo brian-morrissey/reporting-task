@@ -5,6 +5,7 @@ import gzip
 import shutil
 import os
 import http
+from datetime import datetime
 
 def get_status_name(status_code):
     try:
@@ -20,6 +21,8 @@ def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
        LOG.info(f"Deleted existing file: {report_file_path}")
     else:
         LOG.info(f"File does not exist: {report_file_path}")
+
+    print(f"Downloading report started at {datetime.now().strftime("%H:%M:%S")}... This may take a few minutes")
 
     try:
         url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
