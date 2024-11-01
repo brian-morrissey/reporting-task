@@ -31,11 +31,12 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     with open('report', mode='r') as source_file, open(outputFilename, mode='w', newline='') as destination_file:
         header = source_file.readline()
         destination_file.write(header)
-        
+ 
+    LOG.info("Getting Vuln->Findings->Runtime..")
+
     while nextPage:
-        LOG.info("Getting Vuln->Findings->Runtime..")
         try:
-            url = f"https://{arg_secure_url_authority}/api/scanning/runtime/v2/workflows/results?cursor={page}&filter&limit=100&order=desc&sort=runningVulnsBySev&zones"
+            url = f"https://{arg_secure_url_authority}/api/scanning/runtime/v2/workflows/results?cursor={page}&filter&limit=1000&order=desc&sort=runningVulnsBySev&zones"
             response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
         except Exception as e:
             LOG.error(f"An error occurred: {e}")
@@ -104,7 +105,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             if(severityCount):
                 print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
     
-            if(progressCounter % 100 == 0):
+            if(progressCounter % 10 == 0):
                 print(f"{GREEN}Processing runtime assets {progressCounter} of {totalRuntimeFindings}...{RESET}")
 
     print(f"{BLUE}Total assets scanned: {totalRuntimeFindings}{RESET}")

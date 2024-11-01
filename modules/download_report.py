@@ -22,7 +22,7 @@ def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
     else:
         LOG.info(f"File does not exist: {report_file_path}")
 
-    print(f"Downloading report started at {datetime.now().strftime("%H:%M:%S")}... This may take a few minutes")
+    LOG.info(f"Downloading report started at {datetime.now().strftime("%H:%M:%S")}... This may take a few minutes")
 
     try:
         url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
