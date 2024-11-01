@@ -97,11 +97,11 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             matching_rows = lookup_dict.get(key, [])
             for row in matching_rows:
                 rows_to_write.append(row.values())
-                severityCount += 1
                 newTotalEntries += 1
-        
-            if severityCount:
-                print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
+                #severityCount += 1
+                
+            #if severityCount:
+            #    print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
     
             if progressCounter % 1000 == 0:
                 print(f"{GREEN}Processing runtime assets {progressCounter} of {totalRuntimeFindings}...{RESET}")
