@@ -34,6 +34,17 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
  
     LOG.info("Getting Vuln->Findings->Runtime..")
 
+    # Read the CSV file into memory and create a lookup dictionary
+    csv_data = []
+    lookup_dict = defaultdict(list)
+    with open('report', mode='r') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            key = (row['Image ID'], row['K8S cluster name'], row['K8S namespace name'], row['K8S workload type'], row['K8S workload name'], row['K8S container name'])
+            lookup_dict[key].append(row)
+            csv_data.append(row)
+        originalTotalEntries = len(csv_data)
+
     while nextPage:
         try:
             url = f"https://{arg_secure_url_authority}/api/scanning/runtime/v2/workflows/results?cursor={page}&filter&limit=1000&order=desc&sort=runningVulnsBySev&zones"
@@ -59,10 +70,8 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
         # Get total count of runtime findings
         totalRuntimeFindings = json_response_data.get("page", {}).get("matched", "")
 
-        # Open the file report which is CSV delimited and get total entries
-        with open('report', mode='r') as file:
-            csv_reader = csv.DictReader(file)
-            originalTotalEntries = sum(1 for _ in csv_reader)
+        # Collect rows to write in batch
+        rows_to_write = []
 
         # Loop through all results
         for result in json_response_data["data"]:
@@ -80,37 +89,31 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
                 LOG.error(f"Missing key in result: {e}")
                 LOG.error(f"Details of missing key: {result}")
                 break
-            
 
-            # Open the file report which is CSV delimited
-            with open('report', mode='r') as file:
-                csv_reader = csv.DictReader(file)
+            # Create the lookup key
+            key = (resourceId, resultClusterName, resultNamespaceName, resultWorkloadType, resultWorkloadName, resultContainerName)
 
-                # Iterate through each row in the CSV
-                for row in csv_reader:
-                    # Match the fields
-                    if (row['Image ID'] == resourceId and
-                        row['K8S cluster name'] == resultClusterName and
-                        row['K8S namespace name'] == resultNamespaceName and
-                        row['K8S workload type'] == resultWorkloadType and
-                        row['K8S workload name'] == resultWorkloadName and
-                        row['K8S container name'] == resultContainerName):
-                        #print(row['K8S cluster name'],"->",row['K8S namespace name'],"->",row['K8S workload type'],"->",row['K8S workload name'],"->",row['K8S container name'], row['Severity'], row['Package name'], row['Package version'], row['Vulnerability ID'])
-                        with open(outputFilename, mode='a', newline='') as results_file:
-                            csv_writer = csv.writer(results_file)
-                            csv_writer.writerow(row.values())
-                        severityCount += 1
-                        newTotalEntries += 1
+            # Retrieve matching rows from the lookup dictionary
+            matching_rows = lookup_dict.get(key, [])
+            for row in matching_rows:
+                rows_to_write.append(row.values())
+                severityCount += 1
+                newTotalEntries += 1
         
-            if(severityCount):
+            if severityCount:
                 print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
     
-            if(progressCounter % 10 == 0):
+            if progressCounter % 50 == 0:
                 print(f"{GREEN}Processing runtime assets {progressCounter} of {totalRuntimeFindings}...{RESET}")
+
+        # Write collected rows to the output file in batch
+        if rows_to_write:
+            with open(outputFilename, mode='a', newline='') as results_file:
+                csv_writer = csv.writer(results_file)
+                csv_writer.writerows(rows_to_write)
 
     print(f"{BLUE}Total assets scanned: {totalRuntimeFindings}{RESET}")
     print(f"{BLUE}Total runtime report entries: {originalTotalEntries}{RESET}")
     print(f"{BLUE}Total entries for final report: {newTotalEntries}{RESET}")
     print(f"{BLUE}Total inactive runtime entries trimmed: {originalTotalEntries - newTotalEntries}{RESET}")
     print(f"{GREEN}Output report filename: {outputFilename}{RESET}")
-    
