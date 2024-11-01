@@ -103,7 +103,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             if severityCount:
                 print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
     
-            if progressCounter % 50 == 0:
+            if progressCounter % 1000 == 0:
                 print(f"{GREEN}Processing runtime assets {progressCounter} of {totalRuntimeFindings}...{RESET}")
 
         # Write collected rows to the output file in batch
