@@ -145,6 +145,7 @@ def main():
             elif json_response_data.get("reportFormat", {}) != "csv":
                 LOG.error(f"Exiting!! Report export file format is {json_response_data.get("reportFormat", {})} and not csv. Please use a csv for export file format in report.")
                 raise SystemExit(-1)
+            
         elif response.status == 404:
             LOG.error(f"Exiting!! Report schedule not found for scheduleId := {arg_schedule_id}")
             raise SystemExit(-1)
@@ -195,7 +196,7 @@ def main():
                 f"HTTP STATUS {response.status}: Error getting report schedule status for {arg_schedule_id}" 
             )
 
-        # Prompt for last or rerun
+        # Use existing report or run new report based on previous user input
         if not runNewReport:
             print("Using last report schedule run...")
             try:
@@ -237,7 +238,6 @@ def main():
         elapsed_seconds = pc_end - pc_start
         execution_time = "{}".format(str(timedelta(seconds=elapsed_seconds)))
 
-        print(f"Elapsed execution time: {execution_time}")
         LOG.debug(f"Elapsed execution time: {execution_time}")
         LOG.debug(f"HTTP Response Code 429 occurred: {num_of_429} times.")
         LOG.debug(f"HTTP Response Code 504 occurred: {num_of_504} times.")
