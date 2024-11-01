@@ -1,14 +1,17 @@
 import urllib3
 import json
 import logging
-import gzip
-import shutil
-import os
-import csv
 from collections import defaultdict
 from datetime import datetime
+import http
+import csv
 
-
+def get_status_name(status_code):
+    try:
+        return http.HTTPStatus(status_code).phrase
+    except ValueError:
+        return "Unknown Status Code"
+    
 def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     RED = "\033[91m"
     BLUE = "\033[94m"
@@ -20,7 +23,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     originalTotalEntries = 0
     newTotalEntries = 0
     progressCounter = 0
-    outputFilename = 'results.csv'
+ 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     outputFilename = f'results_{timestamp}.csv'
 
@@ -31,12 +34,17 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
         
     while nextPage:
         LOG.info("Getting Vuln->Findings->Runtime..")
-        url = f"https://{arg_secure_url_authority}/api/scanning/runtime/v2/workflows/results?cursor={page}&filter&limit=100&order=desc&sort=runningVulnsBySev&zones"
-        response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        try:
+            url = f"https://{arg_secure_url_authority}/api/scanning/runtime/v2/workflows/results?cursor={page}&filter&limit=100&order=desc&sort=runningVulnsBySev&zones"
+            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        except Exception as e:
+            LOG.error(f"An error occurred: {e}")
+            quit()
+            
         LOG.debug(f"Response status: {response.status}")
 
         if response.status != 200:
-            LOG.error(f"Error Quitting: {response.status}")
+            LOG.error(f"Error Quitting, Received HTTP Status Code {response.status}: {get_status_name(response.status)}")
             quit()
 
         json_response_data = json.loads(response.data.decode())

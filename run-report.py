@@ -2,7 +2,8 @@
   This python script will create a runtime report schedule.
 
   Author: Kendall Adkins
-  Date October 29th, 2024
+  Author: Brian Morrissey
+  Date November 1st, 2024
 """
 
 import argparse
@@ -10,15 +11,10 @@ import logging
 import sys
 import urllib3
 import json
-import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from dateutil import tz
-import math
-import csv
-import platform
 import time
-import csv
 import os.path
 import os
 from modules.get_runtime_vuln_findings import vulnRuntimeFindings
@@ -128,8 +124,12 @@ def main():
         # Get Report Schedule
         #----------------------------
         LOG.info(f"Retrieving report schedule for scheduleId := {arg_schedule_id}...")
-        url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}"
-        response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        try:
+            url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}"
+            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        except Exception as e:
+            LOG.error(f"An error occurred: {e}")
+            quit()
         if response.status == 200:
             json_response_data = json.loads(response.data.decode())
             scheduleId = json_response_data['id']
@@ -163,9 +163,14 @@ def main():
         # Get Last Generated Report Status
         #----------------------------
         print(f"Retrieving status of report schedule for scheduleId := {scheduleId}...")
-        url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
-        response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
-        #LOG.debug(f"Response status: {response.status}")
+        try:
+            url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
+            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        except Exception as e:
+            LOG.error(f"An error occurred: {e}")
+            quit()
+
+        LOG.debug(f"Response status: {response.status}")
         if response.status == 200:
 
             reportScheduleStatus = json.loads(response.data.decode())
@@ -199,11 +204,20 @@ def main():
         use_last_run = input(f"Use last report schedule run? ([yes]/no): ")
         if use_last_run.lower() in ['yes','y', '']:
             print("Using last report schedule run...")
-            url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
-            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+            try:
+                url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
+                response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+            except Exception as e:
+                LOG.error(f"An error occurred: {e}")
+                quit()
+
             json_response_data = json.loads(response.data.decode())
             LOG.debug(f"Response status: {response.status}")
             #print(json.dumps(json_response_data, indent=2))
+
+            if not (200 <= response.status < 300):
+                LOG.error(f"Error Quitting: {response.status}")
+                quit()
 
             hasReportEverRun = json_response_data.get("lastCompletedReport", {})
             
@@ -216,8 +230,7 @@ def main():
         else:
             rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
    
-        # Cleanup
-        # Check if the file "report" exists and delete it if it does
+        # Cleanup - Check if the file "report" exists and delete it if it does
         report_file_path = 'report'
         if os.path.exists(report_file_path):
           os.remove(report_file_path)

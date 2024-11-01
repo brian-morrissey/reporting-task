@@ -4,6 +4,13 @@ import logging
 import gzip
 import shutil
 import os
+import http
+
+def get_status_name(status_code):
+    try:
+        return http.HTTPStatus(status_code).phrase
+    except ValueError:
+        return "Unknown Status Code"
 
 def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
    # Check if the file "report" exists and delete it if it does
@@ -14,8 +21,13 @@ def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
     else:
         LOG.info(f"File does not exist: {report_file_path}")
 
-    url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
-    response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+    try:
+        url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
+        response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+    except Exception as e:
+        LOG.error(f"An error occurred: {e}")
+        quit()
+    
     json_response_data = json.loads(response.data.decode())
     LOG.debug(f"Response status: {response.status}")
     
@@ -29,7 +41,12 @@ def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
     downloadUrl = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/reports/{json_response_data['lastCompletedReport']['reportId']}/download"
 
     # Download the gz file and save it to disk using http_client
-    response = http_client.request(method="GET", url=downloadUrl, redirect=True, timeout=3)
+    try:
+        response = http_client.request(method="GET", url=downloadUrl, redirect=True, timeout=3)
+    except Exception as e:
+        LOG.error(f"An error occurred: {e}")
+        quit()
+
     if response.status == 200:
         with open('report.gz', 'wb') as f:
             f.write(response.data)
@@ -45,4 +62,4 @@ def downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id):
         os.remove('report.gz')
         LOG.info("Original gz file deleted")
     else:
-        LOG.error(f"Failed to download file: {response.status}")
+        LOG.error(f"Error Quitting, Received HTTP Status Code {response.status}: {get_status_name(response.status)}")

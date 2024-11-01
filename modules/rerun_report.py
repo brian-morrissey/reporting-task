@@ -3,7 +3,14 @@ from .get_runtime_vuln_findings import vulnRuntimeFindings
 import json
 import time
 import logging
+import http
 
+def get_status_name(status_code):
+    try:
+        return http.HTTPStatus(status_code).phrase
+    except ValueError:
+        return "Unknown Status Code"
+    
 def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id):
     LOG.info("Rerunning report schedule...")
 
@@ -12,19 +19,24 @@ def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id):
     LOG.debug(f"Response status: {response.status}")
 
     if not (200 <= response.status < 300):
-        LOG.error(f"Error Quitting: {response.status}")
+        LOG.error(f"Error Quitting, Received HTTP Status Code {response.status}: {get_status_name(response.status)}")
         quit()
         
     while True:
-        url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
-        response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
-        json_response_data = json.loads(response.data.decode())
+        try:
+            url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/status"
+            response = http_client.request(method="GET", url=url, redirect=True, timeout=3)
+        except Exception as e:
+            LOG.error(f"An error occurred: {e}")
+            quit()
+
         LOG.debug(f"Response status: {response.status}")
-        #print(json.dumps(json_response_data, indent=2))
 
         if not (200 <= response.status < 300):
-            LOG.error(f"Error Quitting: {response.status}")
+            LOG.error(f"Error Quitting, Received HTTP Status Code {response.status}: {get_status_name(response.status)}")
             quit()
+
+        json_response_data = json.loads(response.data.decode())
 
         currentReportStatus = json_response_data.get("currentReport", {}).get("status", "completed")
         print(f"Report Status: {currentReportStatus.capitalize()}")
