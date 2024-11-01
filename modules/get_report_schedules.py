@@ -32,7 +32,7 @@ def getReportSchedules(LOG, http_client, arg_secure_url_authority):
             quit()
 
         json_response_data = json.loads(response.data.decode())
-
+        print(json_response_data)
         # Check if there is a next page and if not exit the loop
         #page = json_response_data.get("page", {}).get("next", "")
 
@@ -42,13 +42,13 @@ def getReportSchedules(LOG, http_client, arg_secure_url_authority):
         nextPage = False    #Ignoring pages as it is not supported currently
 
         # Print the header
-        print(f"{'Report Name':<90}{'    '}{'ID'}")
-        print(f"{'-' * 90}{'    '}{'-' * 27}")
+        print(f"{'Report Name':<90}{'    '}{'ID':<27}{'    '}{'Last Run Date':<27}")
+        print(f"{'-' * 90}{'    '}{'-' * 27}{'    '}{'-' * 27}")
 
         # Print the report names
         try:
             for report in json_response_data:
-                print(f"{report['name']:<90}{'    '}{report['id']}")
+                print(f"{report['name']:<90}{'    '}{report['id']}{'    '}{report['reportLastCompletedAt']}")
         except Exception as e:
             LOG.error(f"Error processing report names: {e}, Type: {type(e).__name__}")
             quit()
