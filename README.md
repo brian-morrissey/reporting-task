@@ -16,7 +16,7 @@
 
 3. Print the runtime image information and individual CVEs that match the report
 
-
+4. Optionally adds a mapping to a user supplied vulndb excel sheet (--path_to_vulndb)
 
 ### Syntax: 
 
@@ -27,16 +27,31 @@ python3 run-report-schedule.py \
 
    --api_token abcde12345 \
 
-   --schedule_id 2oA0OfdogY5CjfqyJLbuP8TW4tX
+   --schedule_id 2oA0OfdogY5CjfqyJLbuP8TW4tX \
+
+   --path_to_vulndb "C:/temp/vulndb.xlsx"
+
 ```
 ### Example Output:
 
 
-```private-cluster -> test -> deployment -> insecuretest -> insecuretestcontainer Critical certifi 2020.4.5.1 CVE-2023-37920
-private-cluster -> test -> deployment -> insecuretest -> insecuretestcontainer Critical Werkzeug 0.16.0 CVE-2022-29361
-Total Critical: 222
-private-cluster -> ac-test -> deployment -> test -> nginx Critical zlib1g 1:1.2.13.dfsg-1 CVE-2023-45853
-private-cluster -> ac-test -> deployment -> test -> nginx Critical libaom3 3.6.0-1+deb12u1 CVE-2023-6879
-private-cluster -> ac-test -> deployment -> test -> nginx Critical libheif1 1.15.1-1 CVE-2024-41311
-Total Critical: 3
+```
+Retrieving status of report schedule for scheduleId := 2oA0OfdogY5CjfqyJLbuP8TW4tX...
+The last report run completed at 2024-11-20 01:38:44 PM.
+Would you like to rerun the report (yes/[no]): yes
+Report Status: Scheduled
+Report Status: Scheduled
+Report Status: Scheduled
+Report Status: Scheduled
+Report Status: Scheduled
+Report Status: Scheduled
+Report Status: Progress
+Report Status: Completed
+Processing latest report...
+Total assets scanned: 11
+Total runtime report entries: 2092
+Total entries for final report: 2092
+Total inactive runtime entries trimmed: 0
+Total vulndb severity transformations: 1443
+Output report filename: results_20241122085324.csv
 ```
