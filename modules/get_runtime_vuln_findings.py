@@ -104,14 +104,11 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict):
             matching_rows = lookup_dict.get(key, [])
             for row in matching_rows:
                 if vulndb_dict is not None:
-                    match_found = False
-                    # Check if the vulnerability ID is present in the vulndb_dict
-                    for entry in vulndb_dict:
-                        if row['Vulnerability ID'] == entry['Vulnerability ID']:
-                            row['VulnDb'] = entry['Container']
-                            vulndbSubstitionCounter += 1
-                            match_found = True
-                    if not match_found:
+                    vuln_id = row['Vulnerability ID']
+                    if vuln_id in vulndb_dict:
+                        row['VulnDb'] = vulndb_dict[vuln_id]
+                        vulndbSubstitionCounter += 1
+                    else:
                         row['VulnDb'] = row['Severity']
 
                 rows_to_write.append(row.values())

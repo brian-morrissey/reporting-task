@@ -28,6 +28,6 @@ def read_vulndb_excel(file_path):
     df_filtered = df[df["Container"].notnull()]
     
     # Convert the filtered DataFrame into a dictionary
-    vulndb_dict = df_filtered[["Vulnerability ID", "Container"]].to_dict(orient="records")
+    vulndb_dict = df_filtered.set_index("Vulnerability ID")["Container"].to_dict()
     
     return vulndb_dict
