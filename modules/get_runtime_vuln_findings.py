@@ -24,6 +24,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict):
     originalTotalEntries = 0
     newTotalEntries = 0
     progressCounter = 0
+    vulndbSubstitionCounter = 0
  
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     outputFilename = f'results_{timestamp}.csv'
@@ -102,6 +103,17 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict):
             # Retrieve matching rows from the lookup dictionary
             matching_rows = lookup_dict.get(key, [])
             for row in matching_rows:
+                if vulndb_dict is not None:
+                    match_found = False
+                    # Check if the vulnerability ID is present in the vulndb_dict
+                    for entry in vulndb_dict:
+                        if row['Vulnerability ID'] == entry['Vulnerability ID']:
+                            row['VulnDb'] = entry['Container']
+                            vulndbSubstitionCounter += 1
+                            match_found = True
+                    if not match_found:
+                        row['VulnDb'] = row['Severity']
+
                 rows_to_write.append(row.values())
                 newTotalEntries += 1
 
@@ -118,4 +130,6 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict):
     print(f"{BLUE}Total runtime report entries: {originalTotalEntries}{RESET}")
     print(f"{BLUE}Total entries for final report: {newTotalEntries}{RESET}")
     print(f"{BLUE}Total inactive runtime entries trimmed: {originalTotalEntries - newTotalEntries}{RESET}")
+    if vulndb_dict is not None:
+            print(f"{BLUE}Total vulndb severity transformations: {vulndbSubstitionCounter}{RESET}")
     print(f"{GREEN}Output report filename: {outputFilename}{RESET}")

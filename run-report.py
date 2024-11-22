@@ -238,7 +238,7 @@ def main():
                 downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
                 vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict)
         else:
-            rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
+            rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id,vulndb_dict)
    
         # Cleanup - Check if the file "report" exists and delete it if it does
         report_file_path = 'report'
