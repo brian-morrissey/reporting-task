@@ -6,13 +6,14 @@ from datetime import datetime
 import http
 import csv
 
+
 def get_status_name(status_code):
     try:
         return http.HTTPStatus(status_code).phrase
     except ValueError:
         return "Unknown Status Code"
     
-def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
+def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict):
     RED = "\033[91m"
     BLUE = "\033[94m"
     GREEN = "\033[92m"
@@ -27,11 +28,16 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     outputFilename = f'results_{timestamp}.csv'
 
+
     # Add header to new report and overwrite if the file exists
     with open('report', mode='r') as source_file, open(outputFilename, mode='w', newline='') as destination_file:
         header = source_file.readline()
+        # Add 'VulnDb' column header if vulndb_dict is not None
+        if vulndb_dict is not None:
+            header = header.strip() + ',VulnDb\n'
         destination_file.write(header)
- 
+
+
     LOG.info("Getting Vuln->Findings->Runtime..")
 
     # Read the CSV file into memory and create a lookup dictionary
@@ -98,11 +104,7 @@ def vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority):
             for row in matching_rows:
                 rows_to_write.append(row.values())
                 newTotalEntries += 1
-                #severityCount += 1
-                
-            #if severityCount:
-            #    print(f"{RED}Total Critical for {resultClusterName}->{resultNamespaceName}->{resultWorkloadType}->{resultWorkloadName}->{resultContainerName}: {severityCount}{RESET}")
-    
+
             if progressCounter % 1000 == 0:
                 print(f"{GREEN}Processing runtime assets {progressCounter} of {totalRuntimeFindings}...{RESET}")
 

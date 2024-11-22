@@ -11,7 +11,7 @@ def get_status_name(status_code):
     except ValueError:
         return "Unknown Status Code"
     
-def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id):
+def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id,vulndb_dict):
     LOG.info("Rerunning report schedule...")
 
     url = f"https://{arg_secure_url_authority}/api/scanning/reporting/v2/schedules/{arg_schedule_id}/run"
@@ -44,7 +44,7 @@ def rerun_report(LOG, http_client, arg_secure_url_authority,arg_schedule_id):
         if currentReportStatus not in ["scheduled", "progress"]:
             print("Processing latest report...")
             downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
-            vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority)
+            vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict)
             break
         else:
             time.sleep(1)

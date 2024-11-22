@@ -21,6 +21,7 @@ from modules.get_runtime_vuln_findings import vulnRuntimeFindings
 from modules.download_report import downloadReport
 from modules.rerun_report import rerun_report
 from modules.get_report_schedules import getReportSchedules
+from modules.vulndb_transform import read_vulndb_excel
 
 # Setup logger
 LOG = logging.getLogger(__name__)
@@ -79,6 +80,14 @@ def _parse_args():
         action="store_true",
         help="List Sysdig Runtime Report Schedule IDs (can not be used with other params)",
     )
+
+    parser.add_argument(
+        "--path_to_vulndb",
+        required=False,
+        action="store",
+        help="Path to vulndb xls file for column transformation, must contain Vulnerability ID and Container columns",
+    )
+
     parser.add_argument(
         "--debug",
         required=False,
@@ -94,6 +103,7 @@ def main():
         arg_secure_url_authority = args.secure_url_authority
         arg_authentication_bearer = args.api_token
         arg_schedule_id = args.schedule_id
+        arg_path_to_vulndb = args.path_to_vulndb
 
         # Turn on debug logging if requested in args
         if args.debug:
@@ -116,6 +126,11 @@ def main():
             getReportSchedules(LOG, http_client, arg_secure_url_authority)
             quit()
 
+        # Read vulndb xls file if cmd line arg specified
+        if arg_path_to_vulndb:
+            vulndb_dict = read_vulndb_excel(arg_path_to_vulndb)
+        else:
+            vulndb_dict = None
 
         #---------------------------
         # Get Report Schedule
@@ -221,7 +236,7 @@ def main():
                 rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
             else:                
                 downloadReport(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
-                vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority)
+                vulnRuntimeFindings(LOG, http_client, arg_secure_url_authority,vulndb_dict)
         else:
             rerun_report(LOG, http_client, arg_secure_url_authority, arg_schedule_id)
    
